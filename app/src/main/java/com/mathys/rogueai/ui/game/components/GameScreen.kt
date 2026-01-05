@@ -26,12 +26,12 @@ import com.mathys.rogueai.ui.common.SfxManager
 // Composable principal de l'écran de jeu
 @Composable
 fun GameScreen(
-    viewModel: GameViewModel,         // ViewModel contenant l'état du jeu
-    sfxManager: SfxManager,           // Gestionnaire de sons
-    onNavigateToGameOver: () -> Unit  // Callback quand le jeu est terminé
+    viewModel: GameViewModel,
+    sfxManager: SfxManager,
+    onNavigateToGameOver: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()        // Collecte l'état du jeu
-    val previousThreat = remember { mutableStateOf(uiState.threat) }  // Pour détecter les changements de menace
+    val uiState by viewModel.uiState.collectAsState()
+    val previousThreat = remember { mutableStateOf(uiState.threat) }
 
     // Effet déclenché quand la menace change
     LaunchedEffect(uiState.threat) {

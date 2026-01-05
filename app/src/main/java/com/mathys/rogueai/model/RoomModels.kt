@@ -7,8 +7,8 @@ import com.squareup.moshi.JsonClass
  */
 @JsonClass(generateAdapter = true)
 data class CreateRoomRequest(
-    val gameType: String = "toggle", // Type de jeu (ex: toggle, puzzle, etc.)
-    val soloGame: Boolean = false    // Indique si la salle est en mode solo
+    val gameType: String = "toggle",
+    val soloGame: Boolean = false
 )
 
 /**
@@ -17,10 +17,10 @@ data class CreateRoomRequest(
  */
 @JsonClass(generateAdapter = true)
 data class RoomRestriction(
-    val minPlayer: Int,        // Nombre minimum de joueurs requis
-    val maxPlayer: Int,        // Nombre maximum de joueurs autorisés
-    val gameDuration: Long,    // Durée totale de la partie (en ms)
-    val roomRestriction: String // Règles ou restrictions spécifiques à la salle
+    val minPlayer: Int,
+    val maxPlayer: Int,
+    val gameDuration: Long,
+    val roomRestriction: String
 )
 
 /**
@@ -28,8 +28,8 @@ data class RoomRestriction(
  */
 @JsonClass(generateAdapter = true)
 data class CreateRoomResponse(
-    val roomCode: String,          // Code unique permettant de rejoindre la salle
-    val roomInfo: RoomRestriction  // Informations et restrictions de la salle
+    val roomCode: String,
+    val roomInfo: RoomRestriction
 )
 
 /**
@@ -37,5 +37,5 @@ data class CreateRoomResponse(
  */
 @JsonClass(generateAdapter = true)
 data class RoomExistsResponse(
-    val exists: Boolean            // true si la salle existe, false sinon
+    val exists: Boolean
 )

@@ -12,20 +12,20 @@ import kotlinx.coroutines.launch
 
 // État de l'UI pour la salle d'attente
 data class LobbyUiState(
-    val roomCode: String = "",          // Code de la salle
-    val players: List<Player> = emptyList(), // Liste des joueurs connectés
-    val currentPlayer: Player? = null,  // Le joueur courant
-    val isHost: Boolean = false,        // Indique si le joueur courant est l'hôte
-    val canStart: Boolean = false,      // Indique si la partie peut démarrer
-    val gameState: GameState? = null,   // État actuel du jeu
-    val isConnected: Boolean = false,   // Connexion au socket
-    val error: String? = null           // Message d'erreur éventuel
+    val roomCode: String = "",
+    val players: List<Player> = emptyList(),
+    val currentPlayer: Player? = null,
+    val isHost: Boolean = false,
+    val canStart: Boolean = false,
+    val gameState: GameState? = null,
+    val isConnected: Boolean = false,
+    val error: String? = null
 )
 
 // ViewModel de la salle d'attente
 class LobbyViewModel(
     private val roomCode: String,
-    private val socket: RoomSocket       // Socket pour la communication temps réel
+    private val socket: RoomSocket
 ) : ViewModel() {
 
     // StateFlow interne pour gérer l'état de l'UI
@@ -33,7 +33,7 @@ class LobbyViewModel(
     val uiState: StateFlow<LobbyUiState> = _uiState.asStateFlow()
 
     init {
-        observeSocket() // Démarrage de l'observation des flux du socket
+        observeSocket()
     }
 
     // Observes les différents flux provenant du socket

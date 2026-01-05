@@ -23,11 +23,11 @@ import com.mathys.rogueai.ui.common.SfxManager
 // Écran affiché à la fin de la partie
 @Composable
 fun GameOverScreen(
-    viewModel: GameViewModel,           // ViewModel du jeu
-    sfxManager: SfxManager,             // Gestionnaire de sons
-    onNavigateToHome: () -> Unit        // Callback pour retourner à l'écran principal
+    viewModel: GameViewModel,
+    sfxManager: SfxManager,
+    onNavigateToHome: () -> Unit
 ) {
-    val uiState = viewModel.uiState.value // État actuel du jeu
+    val uiState = viewModel.uiState.value
 
     // Jouer un son selon la victoire ou la défaite
     LaunchedEffect(uiState.hasWon) {
@@ -253,9 +253,9 @@ fun GameOverScreen(
 // Composable pour afficher une ligne de statistiques
 @Composable
 fun StatRow(
-    label: String, // Nom de la statistique
-    value: String, // Valeur associée
-    color: Color   // Couleur du texte de la valeur
+    label: String,
+    value: String,
+    color: Color
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),

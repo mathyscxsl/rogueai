@@ -27,10 +27,10 @@ import com.mathys.rogueai.ui.common.SfxManager
 
 // Définition des écrans de l'application
 sealed class Screen {
-    object Home : Screen()                     // Écran d'accueil
-    data class Lobby(val roomCode: String) : Screen() // Salle d'attente avec code
-    data class Game(val roomCode: String) : Screen()  // Écran de jeu
-    object GameOver : Screen()                 // Écran de fin de partie
+    object Home : Screen()
+    data class Lobby(val roomCode: String) : Screen()
+    data class Game(val roomCode: String) : Screen()
+    object GameOver : Screen()
 }
 
 // Activité principale de l'application

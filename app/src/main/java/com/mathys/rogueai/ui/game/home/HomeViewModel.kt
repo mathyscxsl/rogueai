@@ -10,11 +10,11 @@ import kotlinx.coroutines.launch
 
 // Classe représentant l'état de l'écran d'accueil
 data class HomeUiState(
-    val isLoading: Boolean = false,      // Indique si une action réseau est en cours
-    val roomCode: String? = null,        // Code de la salle créée ou jointe
-    val error: String? = null,           // Message d'erreur à afficher
-    val navigateToLobby: Boolean = false,// Indique si on doit naviguer vers le lobby
-    val isSoloMode: Boolean = false      // Mode solo activé ou non
+    val isLoading: Boolean = false,
+    val roomCode: String? = null,
+    val error: String? = null,
+    val navigateToLobby: Boolean = false,
+    val isSoloMode: Boolean = false
 )
 
 // ViewModel pour l'écran d'accueil
@@ -22,7 +22,7 @@ class HomeViewModel(private val repository: GameRepository) : ViewModel() {
 
     // Flow interne pour gérer l'état de l'UI
     private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow() // Exposition immuable
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     // Crée une nouvelle salle de jeu
     fun createRoom() {

@@ -8,9 +8,9 @@ import com.squareup.moshi.JsonClass
  */
 @JsonClass(generateAdapter = true)
 data class Player(
-    val id: String,        // Identifiant unique du joueur
-    val name: String,      // Nom affiché du joueur
-    val ready: Boolean     // Indique si le joueur est prêt à lancer la partie
+    val id: String,
+    val name: String,
+    val ready: Boolean
 )
 
 /**
@@ -19,9 +19,9 @@ data class Player(
  */
 @JsonClass(generateAdapter = true)
 data class RoomInfo(
-    val you: Player,                       // Représentation du joueur courant
-    val players: List<Player>,             // Liste de tous les joueurs présents
+    val you: Player,
+    val players: List<Player>,
     @Json(name = "room_state")
-    val roomState: String,                 // État actuel de la salle (waiting, ready, in_game, etc.)
-    val level: Int? = null                 // Niveau de difficulté (optionnel selon l’état de la room)
+    val roomState: String,
+    val level: Int? = null
 )

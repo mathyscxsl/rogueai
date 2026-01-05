@@ -22,11 +22,11 @@ import androidx.compose.ui.unit.sp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel,                   // ViewModel de l'écran d'accueil
-    onNavigateToLobby: (String) -> Unit         // Callback pour naviguer vers le lobby
+    viewModel: HomeViewModel,
+    onNavigateToLobby: (String) -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()            // État réactif du ViewModel
-    var showJoinDialog by remember { mutableStateOf(false) }    // Contrôle de l'affichage du dialogue de rejoindre
+    val uiState by viewModel.uiState.collectAsState()
+    var showJoinDialog by remember { mutableStateOf(false) }
 
     // Navigation vers le lobby si demandée
     LaunchedEffect(uiState.navigateToLobby) {

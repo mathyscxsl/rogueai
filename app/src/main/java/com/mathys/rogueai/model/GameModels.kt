@@ -9,14 +9,14 @@ import com.squareup.moshi.JsonClass
  */
 @JsonClass(generateAdapter = true)
 data class Command(
-    val id: String,                 // Identifiant unique de la commande
-    val name: String,               // Nom affiché de la commande
-    val type: String,               // Type fonctionnel de la commande
-    val styleType: String,          // Type de style (UI / visuel)
+    val id: String,
+    val name: String,
+    val type: String,
+    val styleType: String,
     @Json(name = "actual_status")
-    val actualStatus: String,       // État actuel de la commande
+    val actualStatus: String,
     @Json(name = "action_possible")
-    val actionPossible: List<String> // Liste des actions autorisées
+    val actionPossible: List<String>
 )
 
 /**
@@ -34,15 +34,15 @@ data class Board(
 @JsonClass(generateAdapter = true)
 data class Instruction(
     @Json(name = "command_id")
-    val commandId: String,          // Commande concernée par l’instruction
-    val timeout: Long,              // Temps maximum pour réaliser l’action
-    val timestampCreation: Long,    // Date de création de l’instruction
+    val commandId: String,
+    val timeout: Long,
+    val timestampCreation: Long,
     @Json(name = "command_type")
-    val commandType: String,        // Type de commande attendu
+    val commandType: String,
     @Json(name = "instruction_text")
-    val instructionText: String,    // Texte affiché au joueur
+    val instructionText: String,
     @Json(name = "expected_status")
-    val expectedStatus: String      // État attendu après l’action
+    val expectedStatus: String
 )
 
 /**
@@ -51,9 +51,9 @@ data class Instruction(
  */
 @JsonClass(generateAdapter = true)
 data class PlayerBoard(
-    val board: Board,               // Plateau de jeu actuel
-    val instruction: Instruction,   // Instruction active
-    val threat: Int                 // Niveau de menace du joueur
+    val board: Board,
+    val instruction: Instruction,
+    val threat: Int
 )
 
 /**
@@ -61,10 +61,10 @@ data class PlayerBoard(
  */
 @JsonClass(generateAdapter = true)
 data class TryHistory(
-    val time: Long,                 // Timestamp de la tentative
+    val time: Long,
     @Json(name = "player_id")
-    val playerId: String,           // Identifiant du joueur
-    val success: Boolean            // Indique si la tentative a réussi
+    val playerId: String,
+    val success: Boolean
 )
 
 /**
@@ -72,8 +72,8 @@ data class TryHistory(
  */
 @JsonClass(generateAdapter = true)
 data class EndState(
-    val win: Boolean,               // Résultat de la partie
-    val tryHistory: List<TryHistory>// Historique des tentatives
+    val win: Boolean,
+    val tryHistory: List<TryHistory>
 )
 
 /**
@@ -93,8 +93,8 @@ sealed class GameState {
 
     // Début de la partie
     data class GameStart(
-        val startThreat: Int,        // Menace initiale
-        val gameDuration: Long       // Durée totale de la partie
+        val startThreat: Int,
+        val gameDuration: Long
     ) : GameState()
 
     // Fin de partie
@@ -109,7 +109,7 @@ sealed class GameState {
  * Peut contenir une mise à jour partielle.
  */
 data class GameUpdate(
-    val playerBoard: PlayerBoard? = null, // Mise à jour du plateau joueur
-    val gameState: GameState? = null,     // Changement d’état du jeu
-    val elapsedTime: Long = 0             // Temps écoulé depuis le début
+    val playerBoard: PlayerBoard? = null,
+    val gameState: GameState? = null,
+    val elapsedTime: Long = 0
 )
