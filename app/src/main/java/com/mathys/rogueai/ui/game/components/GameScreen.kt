@@ -23,30 +23,34 @@ import com.mathys.rogueai.model.Command
 import com.mathys.rogueai.model.Instruction
 import com.mathys.rogueai.ui.common.SfxManager
 
+// Composable principal de l'écran de jeu
 @Composable
 fun GameScreen(
-    viewModel: GameViewModel,
-    sfxManager: SfxManager,
-    onNavigateToGameOver: () -> Unit
+    viewModel: GameViewModel,         // ViewModel contenant l'état du jeu
+    sfxManager: SfxManager,           // Gestionnaire de sons
+    onNavigateToGameOver: () -> Unit  // Callback quand le jeu est terminé
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val previousThreat = remember { mutableStateOf(uiState.threat) }
+    val uiState by viewModel.uiState.collectAsState()        // Collecte l'état du jeu
+    val previousThreat = remember { mutableStateOf(uiState.threat) }  // Pour détecter les changements de menace
 
+    // Effet déclenché quand la menace change
     LaunchedEffect(uiState.threat) {
         if (uiState.threat < previousThreat.value) {
-            sfxManager.playSound(SfxManager.CORRECT_ACTION)
+            sfxManager.playSound(SfxManager.CORRECT_ACTION) // Son pour action correcte
         } else if (uiState.threat > previousThreat.value) {
-            sfxManager.playSound(SfxManager.WRONG_ACTION)
+            sfxManager.playSound(SfxManager.WRONG_ACTION)   // Son pour action incorrecte
         }
         previousThreat.value = uiState.threat
     }
 
+    // Effet déclenché si le jeu est terminé
     LaunchedEffect(uiState.isGameOver) {
         if (uiState.isGameOver) {
             onNavigateToGameOver()
         }
     }
 
+    // Conteneur principal avec un fond dégradé vertical
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -66,12 +70,14 @@ fun GameScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Header affichant la menace et le temps
             CyberpunkHeader(
                 threat = uiState.threat,
                 elapsedTime = uiState.elapsedTime,
                 gameDuration = uiState.gameDuration
             )
 
+            // Carte d'instruction si disponible
             uiState.instruction?.let { instruction ->
                 CyberpunkInstructionCard(
                     instruction = instruction,
@@ -79,6 +85,7 @@ fun GameScreen(
                 )
             }
 
+            // Plateau de commandes si disponible
             uiState.board?.let { board ->
                 ControlBoard(
                     commands = board.commands,
@@ -91,15 +98,17 @@ fun GameScreen(
     }
 }
 
+// Composable affichant le header cyberpunk (menace + temps restant)
 @Composable
 fun CyberpunkHeader(
     threat: Int,
     elapsedTime: Long,
     gameDuration: Long
 ) {
-    val remainingSeconds = ((gameDuration - elapsedTime) / 1000).coerceAtLeast(0)
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val remainingSeconds = ((gameDuration - elapsedTime) / 1000).coerceAtLeast(0) // Temps restant en secondes
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")          // Animation infinie pour pulsation
 
+    // Animation alpha pour le pulsé de la menace élevée
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
         targetValue = 1f,
@@ -110,6 +119,7 @@ fun CyberpunkHeader(
         label = "pulse"
     )
 
+    // Couleur de la menace selon le niveau
     val threatColor = when {
         threat < 30 -> Color(0xFF00FF41)
         threat < 60 -> Color(0xFFFFEB3B)
@@ -148,6 +158,7 @@ fun CyberpunkHeader(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Affichage du niveau de menace
             Column {
                 Text(
                     text = "MENACE MONDIALE",
@@ -164,7 +175,7 @@ fun CyberpunkHeader(
                         text = "$threat",
                         fontSize = 48.sp,
                         fontWeight = FontWeight.Black,
-                        color = threatColor.copy(alpha = if (threat >= 80) pulseAlpha else 1f)
+                        color = threatColor.copy(alpha = if (threat >= 80) pulseAlpha else 1f) // Pulse si menace critique
                     )
                     Text(
                         text = "%",
@@ -176,9 +187,8 @@ fun CyberpunkHeader(
                 }
             }
 
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
+            // Affichage du temps restant
+            Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "TEMPS RESTANT",
                     fontSize = 12.sp,
@@ -212,6 +222,7 @@ fun CyberpunkHeader(
             }
         }
 
+        // Barre de progression de la menace
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -237,13 +248,14 @@ fun CyberpunkHeader(
     }
 }
 
+// Composable pour afficher une instruction avec barre de temps
 @Composable
 fun CyberpunkInstructionCard(
     instruction: Instruction,
     remainingTime: Long
 ) {
-    val progress = (remainingTime.toFloat() / instruction.timeout).coerceIn(0f, 1f)
-    val isUrgent = remainingTime < 5000
+    val progress = (remainingTime.toFloat() / instruction.timeout).coerceIn(0f, 1f) // Calcul du pourcentage restant
+    val isUrgent = remainingTime < 5000                                     // Urgent si moins de 5 secondes
 
     val infiniteTransition = rememberInfiniteTransition(label = "urgent")
     val urgentAlpha by infiniteTransition.animateFloat(
@@ -262,26 +274,19 @@ fun CyberpunkInstructionCard(
             .shadow(if (isUrgent) 16.dp else 8.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .background(
-                if (isUrgent) {
-                    Color(0xFFFF1744).copy(alpha = urgentAlpha * 0.2f)
-                } else {
-                    Color(0xFF2A2A3E)
-                }
+                if (isUrgent) Color(0xFFFF1744).copy(alpha = urgentAlpha * 0.2f)
+                else Color(0xFF2A2A3E)
             )
             .border(
                 width = if (isUrgent) 3.dp else 2.dp,
-                color = if (isUrgent) {
-                    Color(0xFFFF1744).copy(alpha = urgentAlpha)
-                } else {
-                    Color(0xFF03DAC6).copy(alpha = 0.5f)
-                },
+                color = if (isUrgent) Color(0xFFFF1744).copy(alpha = urgentAlpha)
+                else Color(0xFF03DAC6).copy(alpha = 0.5f),
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(20.dp)
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            // Ligne titre + compteur
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -302,6 +307,7 @@ fun CyberpunkInstructionCard(
                 )
             }
 
+            // Texte de l'instruction
             Text(
                 text = instruction.instructionText.uppercase(),
                 fontSize = 20.sp,
@@ -310,6 +316,7 @@ fun CyberpunkInstructionCard(
                 lineHeight = 28.sp
             )
 
+            // Barre de progression de l'instruction
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -324,11 +331,8 @@ fun CyberpunkInstructionCard(
                         .clip(RoundedCornerShape(4.dp))
                         .background(
                             Brush.horizontalGradient(
-                                colors = if (isUrgent) {
-                                    listOf(Color(0xFFFF5722), Color(0xFFFF1744))
-                                } else {
-                                    listOf(Color(0xFF6200EE), Color(0xFF03DAC6))
-                                }
+                                colors = if (isUrgent) listOf(Color(0xFFFF5722), Color(0xFFFF1744))
+                                else listOf(Color(0xFF6200EE), Color(0xFF03DAC6))
                             )
                         )
                 )
@@ -337,6 +341,7 @@ fun CyberpunkInstructionCard(
     }
 }
 
+// Plateau de commandes affiché sous forme de grille
 @Composable
 fun ControlBoard(
     commands: List<Command>,
@@ -357,6 +362,7 @@ fun ControlBoard(
     }
 }
 
+// Carte représentant une commande (toggle ou slider)
 @Composable
 fun CyberpunkControlCard(
     command: Command,
@@ -387,9 +393,8 @@ fun CyberpunkControlCard(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+            // Informations de la commande
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = "▸ ${command.name.uppercase()}",
                     fontSize = 12.sp,
@@ -407,6 +412,7 @@ fun CyberpunkControlCard(
                 )
             }
 
+            // Affichage du contrôle selon le type
             when (command.type) {
                 "toggle" -> {
                     CyberpunkToggleControl(
@@ -426,6 +432,7 @@ fun CyberpunkControlCard(
     }
 }
 
+// Composant bouton toggle
 @Composable
 fun CyberpunkToggleControl(
     isActive: Boolean,
@@ -437,11 +444,7 @@ fun CyberpunkToggleControl(
             .fillMaxWidth()
             .height(48.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isActive) {
-                Color(0xFF00FF41)
-            } else {
-                Color(0xFF1A1A2E)
-            }
+            containerColor = if (isActive) Color(0xFF00FF41) else Color(0xFF1A1A2E)
         ),
         shape = RoundedCornerShape(8.dp),
         elevation = ButtonDefaults.buttonElevation(
@@ -457,15 +460,14 @@ fun CyberpunkToggleControl(
     }
 }
 
+// Composant slider pour choisir une valeur parmi plusieurs
 @Composable
 fun CyberpunkSliderControl(
     currentValue: String,
     possibleValues: List<String>,
     onValueChange: (String) -> Unit
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             text = "▸ $currentValue",
             fontSize = 18.sp,
@@ -473,10 +475,12 @@ fun CyberpunkSliderControl(
             color = Color(0xFF03DAC6)
         )
 
+        // Position actuelle du slider
         var sliderPosition by remember {
             mutableStateOf(possibleValues.indexOf(currentValue).toFloat().coerceAtLeast(0f))
         }
 
+        // Slider affiché
         Slider(
             value = sliderPosition,
             onValueChange = { sliderPosition = it },

@@ -20,14 +20,16 @@ import androidx.compose.ui.unit.sp
 import com.mathys.rogueai.ui.game.components.GameViewModel
 import com.mathys.rogueai.ui.common.SfxManager
 
+// Écran affiché à la fin de la partie
 @Composable
 fun GameOverScreen(
-    viewModel: GameViewModel,
-    sfxManager: SfxManager,
-    onNavigateToHome: () -> Unit
+    viewModel: GameViewModel,           // ViewModel du jeu
+    sfxManager: SfxManager,             // Gestionnaire de sons
+    onNavigateToHome: () -> Unit        // Callback pour retourner à l'écran principal
 ) {
-    val uiState = viewModel.uiState.value
+    val uiState = viewModel.uiState.value // État actuel du jeu
 
+    // Jouer un son selon la victoire ou la défaite
     LaunchedEffect(uiState.hasWon) {
         if (uiState.hasWon) {
             sfxManager.playSound(SfxManager.VICTORY)
@@ -36,6 +38,7 @@ fun GameOverScreen(
         }
     }
 
+    // Animation de pulsation pour le contour de la boîte principale
     val infiniteTransition = rememberInfiniteTransition(label = "result")
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.5f,
@@ -47,21 +50,16 @@ fun GameOverScreen(
         label = "pulse"
     )
 
+    // Conteneur principal centré avec fond dégradé selon victoire/défaite
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
                     colors = if (uiState.hasWon) {
-                        listOf(
-                            Color(0xFF0A0E27),
-                            Color(0xFF1A3A1A)
-                        )
+                        listOf(Color(0xFF0A0E27), Color(0xFF1A3A1A))
                     } else {
-                        listOf(
-                            Color(0xFF0A0E27),
-                            Color(0xFF3A1A1A)
-                        )
+                        listOf(Color(0xFF0A0E27), Color(0xFF3A1A1A))
                     }
                 )
             )
@@ -69,25 +67,20 @@ fun GameOverScreen(
             .statusBarsPadding(),
         contentAlignment = Alignment.Center
     ) {
+        // Boîte principale avec bordure et ombre pulsante
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(24.dp, RoundedCornerShape(24.dp))
                 .clip(RoundedCornerShape(24.dp))
                 .background(
-                    if (uiState.hasWon) {
-                        Color(0xFF00FF41).copy(alpha = pulseAlpha * 0.1f)
-                    } else {
-                        Color(0xFFFF1744).copy(alpha = pulseAlpha * 0.1f)
-                    }
+                    if (uiState.hasWon) Color(0xFF00FF41).copy(alpha = pulseAlpha * 0.1f)
+                    else Color(0xFFFF1744).copy(alpha = pulseAlpha * 0.1f)
                 )
                 .border(
                     width = 3.dp,
-                    color = if (uiState.hasWon) {
-                        Color(0xFF00FF41).copy(alpha = pulseAlpha)
-                    } else {
-                        Color(0xFFFF1744).copy(alpha = pulseAlpha)
-                    },
+                    color = if (uiState.hasWon) Color(0xFF00FF41).copy(alpha = pulseAlpha)
+                    else Color(0xFFFF1744).copy(alpha = pulseAlpha),
                     shape = RoundedCornerShape(24.dp)
                 )
                 .padding(32.dp)
@@ -96,6 +89,7 @@ fun GameOverScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(32.dp)
             ) {
+                // Section texte principale (titre + sous-titre + description)
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -134,6 +128,7 @@ fun GameOverScreen(
                     thickness = 1.dp
                 )
 
+                // Rapport de mission détaillé
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -150,6 +145,7 @@ fun GameOverScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        // Titre du rapport
                         Text(
                             text = "▸ RAPPORT DE MISSION",
                             fontSize = 12.sp,
@@ -158,12 +154,12 @@ fun GameOverScreen(
                             letterSpacing = 2.sp
                         )
 
+                        // Calcul des statistiques
                         val totalAttempts = uiState.tryHistory.size
                         val successfulAttempts = uiState.tryHistory.count { it.success }
-                        val successRate = if (totalAttempts > 0) {
-                            (successfulAttempts * 100 / totalAttempts)
-                        } else 0
+                        val successRate = if (totalAttempts > 0) (successfulAttempts * 100 / totalAttempts) else 0
 
+                        // Statistiques détaillées
                         Column(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -186,6 +182,7 @@ fun GameOverScreen(
 
                             Spacer(modifier = Modifier.height(8.dp))
 
+                            // Taux de réussite global
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -228,6 +225,7 @@ fun GameOverScreen(
                     }
                 }
 
+                // Bouton pour retourner à la base
                 Button(
                     onClick = onNavigateToHome,
                     modifier = Modifier
@@ -252,11 +250,12 @@ fun GameOverScreen(
     }
 }
 
+// Composable pour afficher une ligne de statistiques
 @Composable
 fun StatRow(
-    label: String,
-    value: String,
-    color: Color
+    label: String, // Nom de la statistique
+    value: String, // Valeur associée
+    color: Color   // Couleur du texte de la valeur
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),

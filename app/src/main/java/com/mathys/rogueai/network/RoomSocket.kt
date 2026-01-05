@@ -6,20 +6,26 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import okhttp3.WebSocket
-import okhttp3.WebSocketListener
+import okhttp3.*
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
+/**
+ * Gère la communication WebSocket avec une salle de jeu.
+ * Permet de recevoir en temps réel l’état du lobby, du jeu et du plateau joueur.
+ */
 class RoomSocket(
     private val client: OkHttpClient = defaultClient(),
     private val baseUrl: String = "wss://backend.rogueai.surpuissant.io"
 ) {
+
+    // WebSocket actif
     private var webSocket: WebSocket? = null
+
+    // Scope utilisé pour poster les événements côté UI
     private var scope: CoroutineScope? = null
+
+    /* ---------- StateFlow exposés à l’UI ---------- */
 
     private val _connected = MutableStateFlow(false)
     val connected: StateFlow<Boolean> = _connected.asStateFlow()
@@ -36,6 +42,12 @@ class RoomSocket(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    /**
+     * Ouvre une connexion WebSocket vers une salle spécifique.
+     *
+     * @param roomCode code unique de la salle
+     * @param coroutineScope scope de la couche appelante (ViewModel en général)
+     */
     fun openRoomConnection(roomCode: String, coroutineScope: CoroutineScope) {
         scope = coroutineScope
         closeRoomConnection()
@@ -48,37 +60,28 @@ class RoomSocket(
 
         val listener = RoomWebSocketListener(
             scope = coroutineScope,
-            onRoomInfo = { info ->
-                println("RoomSocket: Received room info - ${info.players.size} players")
-                _roomInfo.value = info
-            },
-            onGameState = { state ->
-                println("RoomSocket: Received game state - $state")
-                _gameState.value = state
-            },
-            onPlayerBoard = { board ->
-                println("RoomSocket: Received player board")
-                _playerBoard.value = board
-            },
-            onError = { err ->
-                println("RoomSocket: Error - $err")
-                _error.value = err
-            },
-            onOpenChanged = { isOpen ->
-                println("RoomSocket: Connection open changed - $isOpen")
-                _connected.value = isOpen
-            }
+            onRoomInfo = { _roomInfo.value = it },
+            onGameState = { _gameState.value = it },
+            onPlayerBoard = { _playerBoard.value = it },
+            onError = { _error.value = it },
+            onOpenChanged = { _connected.value = it }
         )
 
         webSocket = client.newWebSocket(request, listener)
     }
 
+    /**
+     * Ferme proprement la connexion WebSocket.
+     */
     fun closeRoomConnection(code: Int = 1000, reason: String = "client closing") {
         webSocket?.close(code, reason)
         webSocket = null
         _connected.value = false
     }
 
+    /**
+     * Envoie l’état "prêt / non prêt" du joueur.
+     */
     fun sendReady(ready: Boolean): Boolean {
         val msg = JSONObject()
             .put("type", "room")
@@ -87,6 +90,9 @@ class RoomSocket(
         return webSocket?.send(msg) ?: false
     }
 
+    /**
+     * Demande au serveur de rafraîchir le nom du joueur.
+     */
     fun refreshName(): Boolean {
         val msg = JSONObject()
             .put("type", "refresh_name")
@@ -94,17 +100,25 @@ class RoomSocket(
         return webSocket?.send(msg) ?: false
     }
 
+    /**
+     * Envoie une action exécutée par le joueur sur une commande.
+     */
     fun sendExecuteAction(commandId: String, action: String): Boolean {
         val payload = JSONObject()
             .put("command_id", commandId)
             .put("action", action)
+
         val msg = JSONObject()
             .put("type", "execute_action")
             .put("payload", payload)
             .toString()
+
         return webSocket?.send(msg) ?: false
     }
 
+    /**
+     * Listener WebSocket interne responsable du parsing des messages entrants.
+     */
     private inner class RoomWebSocketListener(
         private val scope: CoroutineScope,
         private val onRoomInfo: (RoomInfo) -> Unit,
@@ -121,25 +135,21 @@ class RoomSocket(
         override fun onMessage(webSocket: WebSocket, text: String) {
             scope.launch {
                 try {
-                    println("RoomSocket: Received message - $text")
                     val root = JSONObject(text)
 
+                    // Gestion des erreurs envoyées par le serveur
                     if (root.has("error")) {
-                        val errorMsg = root.optString("error")
-                        println("RoomSocket: Server error - $errorMsg")
-                        onError(errorMsg)
+                        onError(root.optString("error"))
                         return@launch
                     }
 
+                    // Dispatch selon le type de message
                     when (root.optString("type")) {
                         "room_info" -> parseRoomInfo(root)
                         "game_state" -> parseGameState(root)
                         "player_board" -> parsePlayerBoard(root)
-                        else -> println("RoomSocket: Unknown message type - ${root.optString("type")}")
                     }
                 } catch (t: Throwable) {
-                    println("RoomSocket: Parse error - ${t.message}")
-                    t.printStackTrace()
                     onError(t.message ?: "Failed to parse message")
                 }
             }
@@ -156,20 +166,13 @@ class RoomSocket(
             }
         }
 
+        /**
+         * Parse les informations du lobby (joueurs, état de la room).
+         */
         private fun parseRoomInfo(root: JSONObject) {
-            println("RoomSocket: Parsing room info")
-            val payload = root.optJSONObject("payload") ?: run {
-                println("RoomSocket: No payload in room_info")
-                return
-            }
-            val youObj = payload.optJSONObject("you") ?: run {
-                println("RoomSocket: No 'you' in payload")
-                return
-            }
-            val playersArray = payload.optJSONArray("players") ?: run {
-                println("RoomSocket: No 'players' in payload")
-                return
-            }
+            val payload = root.optJSONObject("payload") ?: return
+            val youObj = payload.optJSONObject("you") ?: return
+            val playersArray = payload.optJSONArray("players") ?: return
 
             val you = Player(
                 id = youObj.optString("id"),
@@ -177,19 +180,14 @@ class RoomSocket(
                 ready = youObj.optBoolean("ready")
             )
 
-            val players = mutableListOf<Player>()
-            for (i in 0 until playersArray.length()) {
-                val p = playersArray.getJSONObject(i)
-                players.add(
-                    Player(
-                        id = p.optString("id"),
-                        name = p.optString("name"),
-                        ready = p.optBoolean("ready")
-                    )
+            val players = (0 until playersArray.length()).map {
+                val p = playersArray.getJSONObject(it)
+                Player(
+                    id = p.optString("id"),
+                    name = p.optString("name"),
+                    ready = p.optBoolean("ready")
                 )
             }
-
-            println("RoomSocket: Parsed ${players.size} players, you = ${you.name}")
 
             onRoomInfo(
                 RoomInfo(
@@ -201,27 +199,26 @@ class RoomSocket(
             )
         }
 
+        /**
+         * Parse l’état global du jeu.
+         */
         private fun parseGameState(root: JSONObject) {
             val payload = root.optJSONObject("payload") ?: return
-            val state = payload.optString("state")
 
-            val gameState = when (state) {
+            val gameState = when (payload.optString("state")) {
                 "lobby_waiting" -> GameState.LobbyWaiting
                 "lobby_ready" -> GameState.LobbyReady
-                "timer_before_start" -> {
-                    val duration = payload.optLong("duration", 3000)
-                    GameState.TimerBeforeStart(duration)
-                }
-                "game_start" -> {
-                    val startThreat = payload.optInt("start_threat", 25)
-                    val gameDuration = payload.optLong("game_duration", 180000)
-                    GameState.GameStart(startThreat, gameDuration)
-                }
+                "timer_before_start" ->
+                    GameState.TimerBeforeStart(payload.optLong("duration", 3000))
+                "game_start" ->
+                    GameState.GameStart(
+                        payload.optInt("start_threat", 25),
+                        payload.optLong("game_duration", 180000)
+                    )
                 "end_state" -> {
-                    val win = payload.optBoolean("win", false)
-                    val tryHistory = payload.optJSONArray("tryHistory")?.let { arr ->
-                        (0 until arr.length()).map { i ->
-                            val item = arr.getJSONObject(i)
+                    val history = payload.optJSONArray("tryHistory")?.let { arr ->
+                        (0 until arr.length()).map {
+                            val item = arr.getJSONObject(it)
                             TryHistory(
                                 time = item.optLong("time"),
                                 playerId = item.optString("player_id"),
@@ -229,35 +226,33 @@ class RoomSocket(
                             )
                         }
                     } ?: emptyList()
-                    GameState.EndState(win, tryHistory)
+                    GameState.EndState(payload.optBoolean("win"), history)
                 }
                 else -> null
             }
 
-            gameState?.let { onGameState(it) }
+            gameState?.let(onGameState)
         }
 
+        /**
+         * Parse le plateau de jeu spécifique au joueur.
+         */
         private fun parsePlayerBoard(root: JSONObject) {
             val payload = root.optJSONObject("payload") ?: return
             val boardObj = payload.optJSONObject("board") ?: return
             val commandsArray = boardObj.optJSONArray("commands") ?: return
             val instructionObj = payload.optJSONObject("instruction") ?: return
 
-            val commands = mutableListOf<Command>()
-            for (i in 0 until commandsArray.length()) {
-                val c = commandsArray.getJSONObject(i)
-                val actionsArray = c.optJSONArray("action_possible") ?: continue
-                val actions = (0 until actionsArray.length()).map { actionsArray.getString(it) }
-
-                commands.add(
-                    Command(
-                        id = c.optString("id"),
-                        name = c.optString("name"),
-                        type = c.optString("type"),
-                        styleType = c.optString("styleType"),
-                        actualStatus = c.optString("actual_status"),
-                        actionPossible = actions
-                    )
+            val commands = (0 until commandsArray.length()).mapNotNull {
+                val c = commandsArray.getJSONObject(it)
+                val actions = c.optJSONArray("action_possible") ?: return@mapNotNull null
+                Command(
+                    id = c.optString("id"),
+                    name = c.optString("name"),
+                    type = c.optString("type"),
+                    styleType = c.optString("styleType"),
+                    actualStatus = c.optString("actual_status"),
+                    actionPossible = (0 until actions.length()).map { i -> actions.getString(i) }
                 )
             }
 
@@ -278,16 +273,22 @@ class RoomSocket(
         }
     }
 
+    /**
+     * Client WebSocket par défaut.
+     */
     companion object {
-        private fun defaultClient(): OkHttpClient {
-            return OkHttpClient.Builder()
+        private fun defaultClient(): OkHttpClient =
+            OkHttpClient.Builder()
                 .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(0, TimeUnit.SECONDS)
+                .readTimeout(0, TimeUnit.SECONDS) // Connexion persistante
                 .pingInterval(20, TimeUnit.SECONDS)
                 .build()
-        }
     }
 
+    /**
+     * Réinitialise complètement l’état local.
+     * Utile lors d’un changement de room ou d’une déconnexion.
+     */
     fun resetAll() {
         closeRoomConnection()
         _roomInfo.value = null

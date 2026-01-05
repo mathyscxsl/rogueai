@@ -21,24 +21,27 @@ import androidx.compose.ui.unit.sp
 import com.mathys.rogueai.model.GameState
 import com.mathys.rogueai.ui.common.SfxManager
 
+// Écran de la salle d'attente avant le début d'une partie
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LobbyScreen(
     viewModel: LobbyViewModel,
     sfxManager: SfxManager,
-    onNavigateToGame: () -> Unit,
-    onNavigateBack: () -> Unit = {}
+    onNavigateToGame: () -> Unit,   // Navigation vers l'écran de jeu
+    onNavigateBack: () -> Unit = {} // Retour en arrière
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState() // État de l'UI
     val previousPlayerCount = remember { mutableStateOf(0) }
 
+    // Effet déclenché lorsqu'un joueur rejoint
     LaunchedEffect(uiState.players.size) {
         if (uiState.players.size > previousPlayerCount.value && previousPlayerCount.value > 0) {
-            sfxManager.playSound(SfxManager.PLAYER_JOINED)
+            sfxManager.playSound(SfxManager.PLAYER_JOINED) // Jouer son de nouveau joueur
         }
         previousPlayerCount.value = uiState.players.size
     }
 
+    // Effet déclenché lorsqu'un joueur devient prêt
     LaunchedEffect(uiState.players) {
         val readyPlayers = uiState.players.count { it.ready }
         if (readyPlayers > 0) {
@@ -46,25 +49,22 @@ fun LobbyScreen(
         }
     }
 
+    // Effet déclenché en fonction de l'état du jeu
     LaunchedEffect(uiState.gameState) {
         when (uiState.gameState) {
-            is GameState.TimerBeforeStart -> {
-                sfxManager.playSound(SfxManager.GAME_START)
-            }
-            is GameState.GameStart -> onNavigateToGame()
+            is GameState.TimerBeforeStart -> sfxManager.playSound(SfxManager.GAME_START)
+            is GameState.GameStart -> onNavigateToGame() // Démarrage du jeu
             else -> {}
         }
     }
 
+    // Conteneur principal avec fond dégradé
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF0A0E27),
-                        Color(0xFF1A1F3A)
-                    )
+                    colors = listOf(Color(0xFF0A0E27), Color(0xFF1A1F3A))
                 )
             )
     ) {
@@ -84,6 +84,7 @@ fun LobbyScreen(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+                // Partie principale contenant stats, joueurs et erreurs
                 Column(
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     modifier = Modifier.weight(1f)
@@ -96,17 +97,17 @@ fun LobbyScreen(
                     )
 
                     uiState.error?.let { errorMsg ->
-                        ErrorCard(errorMsg)
+                        ErrorCard(errorMsg) // Affiche message d'erreur si présent
                     }
 
+                    // Affiche le compte à rebours avant le début du jeu
                     when (val state = uiState.gameState) {
-                        is GameState.TimerBeforeStart -> {
-                            CountdownCard(initialDuration = state.duration)
-                        }
+                        is GameState.TimerBeforeStart -> CountdownCard(initialDuration = state.duration)
                         else -> {}
                     }
                 }
 
+                // Boutons d'interaction du joueur
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -146,6 +147,7 @@ fun LobbyScreen(
     }
 }
 
+// Barre supérieure de la salle d'attente affichant le code de la salle
 @Composable
 fun CyberpunkTopBar(
     roomCode: String,
@@ -157,10 +159,7 @@ fun CyberpunkTopBar(
             .statusBarsPadding()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF1E1E2E),
-                        Color.Transparent
-                    )
+                    colors = listOf(Color(0xFF1E1E2E), Color.Transparent)
                 )
             )
             .padding(horizontal = 20.dp, vertical = 16.dp)
@@ -170,6 +169,7 @@ fun CyberpunkTopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Bouton retour
             IconButton(onClick = onNavigateBack) {
                 Text(
                     "←",
@@ -179,6 +179,7 @@ fun CyberpunkTopBar(
                 )
             }
 
+            // Affiche titre et code de la salle
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "SALLE D'ATTENTE",
@@ -196,11 +197,12 @@ fun CyberpunkTopBar(
                 )
             }
 
-            Spacer(modifier = Modifier.width(48.dp))
+            Spacer(modifier = Modifier.width(48.dp)) // Espace pour équilibrer le layout
         }
     }
 }
 
+// Carte affichant le nombre de joueurs connectés
 @Composable
 fun LobbyStatsCard(playerCount: Int) {
     Box(
@@ -208,19 +210,8 @@ fun LobbyStatsCard(playerCount: Int) {
             .fillMaxWidth()
             .shadow(8.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFF1E1E2E),
-                        Color(0xFF2A2A3E)
-                    )
-                )
-            )
-            .border(
-                width = 2.dp,
-                color = Color(0xFF6200EE).copy(alpha = 0.5f),
-                shape = RoundedCornerShape(16.dp)
-            )
+            .background(Brush.horizontalGradient(colors = listOf(Color(0xFF1E1E2E), Color(0xFF2A2A3E))))
+            .border(width = 2.dp, color = Color(0xFF6200EE).copy(alpha = 0.5f), shape = RoundedCornerShape(16.dp))
             .padding(20.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -239,10 +230,7 @@ fun LobbyStatsCard(playerCount: Int) {
                     text = "$playerCount",
                     fontSize = 48.sp,
                     fontWeight = FontWeight.Black,
-                    color = when {
-                        playerCount < 2 -> Color(0xFFFF9800)
-                        else -> Color(0xFF00FF41)
-                    }
+                    color = if (playerCount < 2) Color(0xFFFF9800) else Color(0xFF00FF41)
                 )
                 Text(
                     text = "/ 6",
@@ -261,6 +249,7 @@ fun LobbyStatsCard(playerCount: Int) {
     }
 }
 
+// Carte affichant la liste des joueurs et leur état prêt
 @Composable
 fun PlayersListCard(
     players: List<com.mathys.rogueai.model.Player>,
@@ -272,11 +261,7 @@ fun PlayersListCard(
             .shadow(8.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFF1E1E2E))
-            .border(
-                width = 2.dp,
-                color = Color(0xFF03DAC6).copy(alpha = 0.3f),
-                shape = RoundedCornerShape(16.dp)
-            )
+            .border(width = 2.dp, color = Color(0xFF03DAC6).copy(alpha = 0.3f), shape = RoundedCornerShape(16.dp))
             .padding(20.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -288,9 +273,7 @@ fun PlayersListCard(
                 letterSpacing = 2.sp
             )
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(players) { player ->
                     CyberpunkPlayerItem(
                         player = player,
@@ -303,6 +286,7 @@ fun PlayersListCard(
     }
 }
 
+// Affiche chaque joueur dans la liste avec son statut
 @Composable
 fun CyberpunkPlayerItem(
     player: com.mathys.rogueai.model.Player,
@@ -314,21 +298,8 @@ fun CyberpunkPlayerItem(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(
-                if (isCurrentPlayer) {
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFF6200EE).copy(alpha = 0.3f),
-                            Color(0xFF03DAC6).copy(alpha = 0.2f)
-                        )
-                    )
-                } else {
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFF2A2A3E),
-                            Color(0xFF1E1E2E)
-                        )
-                    )
-                }
+                if (isCurrentPlayer) Brush.horizontalGradient(listOf(Color(0xFF6200EE).copy(alpha = 0.3f), Color(0xFF03DAC6).copy(alpha = 0.2f)))
+                else Brush.horizontalGradient(listOf(Color(0xFF2A2A3E), Color(0xFF1E1E2E)))
             )
             .border(
                 width = if (isCurrentPlayer) 2.dp else 1.dp,
@@ -342,10 +313,8 @@ fun CyberpunkPlayerItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            // Nom et indicateurs du joueur
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = if (isCurrentPlayer) "▸" else "◦",
                     fontSize = 16.sp,
@@ -363,21 +332,17 @@ fun CyberpunkPlayerItem(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF0A0E27),
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Color(0xFF00FF41))
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                        modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Color(0xFF00FF41)).padding(horizontal = 6.dp, vertical = 2.dp),
                         letterSpacing = 1.sp
                     )
                 }
             }
 
+            // État prêt ou attente
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
-                    .background(
-                        if (player.ready) Color(0xFF00FF41) else Color(0xFF1A1A2E)
-                    )
+                    .background(if (player.ready) Color(0xFF00FF41) else Color(0xFF1A1A2E))
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Text(
@@ -392,6 +357,7 @@ fun CyberpunkPlayerItem(
     }
 }
 
+// Carte d'erreur affichant un message
 @Composable
 fun ErrorCard(errorMsg: String) {
     Box(
@@ -400,11 +366,7 @@ fun ErrorCard(errorMsg: String) {
             .shadow(8.dp, RoundedCornerShape(12.dp))
             .clip(RoundedCornerShape(12.dp))
             .background(Color(0xFFFF1744).copy(alpha = 0.2f))
-            .border(
-                width = 2.dp,
-                color = Color(0xFFFF1744),
-                shape = RoundedCornerShape(12.dp)
-            )
+            .border(width = 2.dp, color = Color(0xFFFF1744), shape = RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -415,15 +377,12 @@ fun ErrorCard(errorMsg: String) {
                 color = Color(0xFFFF1744),
                 letterSpacing = 2.sp
             )
-            Text(
-                text = errorMsg,
-                color = Color.White,
-                fontSize = 14.sp
-            )
+            Text(text = errorMsg, color = Color.White, fontSize = 14.sp)
         }
     }
 }
 
+// Carte affichant le compte à rebours avant le début de la partie
 @Composable
 fun CountdownCard(initialDuration: Long) {
     var remainingTime by remember { mutableStateOf(initialDuration) }
@@ -440,10 +399,7 @@ fun CountdownCard(initialDuration: Long) {
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.5f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
+        animationSpec = infiniteRepeatable(animation = tween(500, easing = LinearEasing), repeatMode = RepeatMode.Reverse),
         label = "pulse"
     )
 
@@ -453,18 +409,11 @@ fun CountdownCard(initialDuration: Long) {
             .shadow(16.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFF00FF41).copy(alpha = pulseAlpha * 0.2f))
-            .border(
-                width = 3.dp,
-                color = Color(0xFF00FF41).copy(alpha = pulseAlpha),
-                shape = RoundedCornerShape(16.dp)
-            )
+            .border(width = 3.dp, color = Color(0xFF00FF41).copy(alpha = pulseAlpha), shape = RoundedCornerShape(16.dp))
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = "◉ LANCEMENT IMMINENT",
                 fontSize = 14.sp,
@@ -482,6 +431,7 @@ fun CountdownCard(initialDuration: Long) {
     }
 }
 
+// Bouton principal avec couleur dynamique selon l'état "ready"
 @Composable
 fun CyberpunkButton(
     text: String,
@@ -494,21 +444,10 @@ fun CyberpunkButton(
             .fillMaxWidth()
             .height(64.dp)
             .shadow(if (isReady) 12.dp else 8.dp, RoundedCornerShape(12.dp)),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isReady) Color(0xFFFF9800) else Color(0xFF00FF41)
-        ),
+        colors = ButtonDefaults.buttonColors(containerColor = if (isReady) Color(0xFFFF9800) else Color(0xFF00FF41)),
         shape = RoundedCornerShape(12.dp),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 8.dp,
-            pressedElevation = 2.dp
-        )
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp, pressedElevation = 2.dp)
     ) {
-        Text(
-            text,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Black,
-            color = Color(0xFF0A0E27),
-            letterSpacing = 2.sp
-        )
+        Text(text, fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color(0xFF0A0E27), letterSpacing = 2.sp)
     }
 }

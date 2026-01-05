@@ -18,15 +18,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// Écran d'accueil principal du jeu
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel,
-    onNavigateToLobby: (String) -> Unit
+    viewModel: HomeViewModel,                   // ViewModel de l'écran d'accueil
+    onNavigateToLobby: (String) -> Unit         // Callback pour naviguer vers le lobby
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    var showJoinDialog by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsState()            // État réactif du ViewModel
+    var showJoinDialog by remember { mutableStateOf(false) }    // Contrôle de l'affichage du dialogue de rejoindre
 
+    // Navigation vers le lobby si demandée
     LaunchedEffect(uiState.navigateToLobby) {
         if (uiState.navigateToLobby && uiState.roomCode != null) {
             onNavigateToLobby(uiState.roomCode!!)
@@ -34,6 +36,7 @@ fun HomeScreen(
         }
     }
 
+    // Animation de pulsation pour le titre
     val infiniteTransition = rememberInfiniteTransition(label = "title")
     val titleAlpha by infiniteTransition.animateFloat(
         initialValue = 0.7f,
@@ -45,16 +48,13 @@ fun HomeScreen(
         label = "titlePulse"
     )
 
+    // Conteneur principal avec fond dégradé
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF0A0E27),
-                        Color(0xFF1A1F3A),
-                        Color(0xFF0A0E27)
-                    )
+                    colors = listOf(Color(0xFF0A0E27), Color(0xFF1A1F3A), Color(0xFF0A0E27))
                 )
             )
             .statusBarsPadding()
@@ -65,6 +65,7 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(40.dp)
         ) {
+            // Section titre avec animation et dégradés
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(24.dp)
@@ -111,6 +112,7 @@ fun HomeScreen(
                             color = Color.White,
                             letterSpacing = 8.sp
                         )
+                        // Ligne décorative
                         Box(
                             modifier = Modifier
                                 .width(200.dp)
@@ -129,6 +131,7 @@ fun HomeScreen(
                     }
                 }
 
+                // Sous-titre avec description du jeu
                 Text(
                     text = "Neutralisez l'IA avant qu'elle\nne domine le monde",
                     fontSize = 16.sp,
@@ -138,20 +141,24 @@ fun HomeScreen(
                 )
             }
 
+            // Section des options et boutons
             Column(
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
+                // Carte pour activer/désactiver le mode solo
                 SoloModeCard(
                     isSoloMode = uiState.isSoloMode,
                     onToggle = { viewModel.toggleSoloMode() },
                     isEnabled = !uiState.isLoading
                 )
 
+                // Avertissement si le mode solo est activé
                 if (uiState.isSoloMode) {
                     WarningCard()
                 }
 
+                // Bouton pour créer une mission
                 CyberpunkButton(
                     text = "▸ CRÉER UNE MISSION",
                     onClick = { viewModel.createRoom() },
@@ -160,6 +167,7 @@ fun HomeScreen(
                     isPrimary = true
                 )
 
+                // Bouton pour rejoindre une mission
                 CyberpunkButton(
                     text = "◉ REJOINDRE UNE MISSION",
                     onClick = { showJoinDialog = true },
@@ -169,12 +177,14 @@ fun HomeScreen(
                 )
             }
 
+            // Affichage des erreurs éventuelles
             uiState.error?.let { error ->
                 ErrorCard(error)
             }
         }
     }
 
+    // Dialogue pour entrer un code de mission
     if (showJoinDialog) {
         CyberpunkJoinDialog(
             onDismiss = { showJoinDialog = false },
@@ -186,6 +196,7 @@ fun HomeScreen(
     }
 }
 
+// Carte pour activer/désactiver le mode solo
 @Composable
 fun SoloModeCard(
     isSoloMode: Boolean,
@@ -199,19 +210,13 @@ fun SoloModeCard(
             .clip(RoundedCornerShape(16.dp))
             .background(
                 Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFF1E1E2E),
-                        Color(0xFF2A2A3E)
-                    )
+                    colors = listOf(Color(0xFF1E1E2E), Color(0xFF2A2A3E))
                 )
             )
             .border(
                 width = 2.dp,
-                color = if (isSoloMode) {
-                    Color(0xFFFFEB3B).copy(alpha = 0.5f)
-                } else {
-                    Color(0xFF6200EE).copy(alpha = 0.3f)
-                },
+                color = if (isSoloMode) Color(0xFFFFEB3B).copy(alpha = 0.5f)
+                else Color(0xFF6200EE).copy(alpha = 0.3f),
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(20.dp)
@@ -249,6 +254,7 @@ fun SoloModeCard(
                 )
             }
 
+            // Switch pour activer/désactiver le mode solo
             Switch(
                 checked = isSoloMode,
                 onCheckedChange = { onToggle() },
@@ -264,6 +270,7 @@ fun SoloModeCard(
     }
 }
 
+// Carte d'avertissement pour le mode solo
 @Composable
 fun WarningCard() {
     val infiniteTransition = rememberInfiniteTransition(label = "warning")
@@ -309,6 +316,7 @@ fun WarningCard() {
     }
 }
 
+// Bouton stylisé pour l'UI cyberpunk
 @Composable
 fun CyberpunkButton(
     text: String,
@@ -325,11 +333,7 @@ fun CyberpunkButton(
             .height(64.dp)
             .shadow(if (isPrimary) 12.dp else 8.dp, RoundedCornerShape(12.dp)),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isPrimary) {
-                Color(0xFF00FF41)
-            } else {
-                Color.Transparent
-            },
+            containerColor = if (isPrimary) Color(0xFF00FF41) else Color.Transparent,
             disabledContainerColor = Color(0xFF1A1A2E)
         ),
         shape = RoundedCornerShape(12.dp),
@@ -360,6 +364,7 @@ fun CyberpunkButton(
     }
 }
 
+// Carte d'erreur stylisée
 @Composable
 fun ErrorCard(error: String) {
     val infiniteTransition = rememberInfiniteTransition(label = "error")
@@ -415,6 +420,7 @@ fun ErrorCard(error: String) {
     }
 }
 
+// Dialogue pour entrer un code de mission
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CyberpunkJoinDialog(
@@ -448,9 +454,7 @@ fun CyberpunkJoinDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         text = "◉ REJOINDRE UNE MISSION",
                         fontSize = 14.sp,
@@ -469,19 +473,8 @@ fun CyberpunkJoinDialog(
                 OutlinedTextField(
                     value = code,
                     onValueChange = { code = it.uppercase() },
-                    label = {
-                        Text(
-                            "CODE MISSION",
-                            fontSize = 12.sp,
-                            letterSpacing = 1.sp
-                        )
-                    },
-                    placeholder = {
-                        Text(
-                            "Ex: ABC123",
-                            color = Color.White.copy(alpha = 0.3f)
-                        )
-                    },
+                    label = { Text("CODE MISSION", fontSize = 12.sp, letterSpacing = 1.sp) },
+                    placeholder = { Text("Ex: ABC123", color = Color.White.copy(alpha = 0.3f)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -502,56 +495,29 @@ fun CyberpunkJoinDialog(
                     )
                 )
 
+                // Boutons Annuler / Valider
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color.White.copy(alpha = 0.7f)
-                        ),
+                        modifier = Modifier.weight(1f).height(56.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White.copy(alpha = 0.7f)),
                         border = ButtonDefaults.outlinedButtonBorder.copy(
                             width = 1.dp,
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.3f),
-                                    Color.White.copy(alpha = 0.3f)
-                                )
-                            )
+                            brush = Brush.horizontalGradient(colors = listOf(Color.White.copy(alpha = 0.3f), Color.White.copy(alpha = 0.3f)))
                         ),
                         shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            "ANNULER",
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        )
-                    }
+                    ) { Text("ANNULER", fontWeight = FontWeight.Bold, letterSpacing = 1.sp) }
 
                     Button(
                         onClick = { onJoin(code) },
                         enabled = code.isNotBlank(),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp)
-                            .shadow(8.dp, RoundedCornerShape(12.dp)),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF00FF41),
-                            disabledContainerColor = Color(0xFF1A1A2E)
-                        ),
+                        modifier = Modifier.weight(1f).height(56.dp).shadow(8.dp, RoundedCornerShape(12.dp)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FF41), disabledContainerColor = Color(0xFF1A1A2E)),
                         shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            "VALIDER",
-                            fontWeight = FontWeight.Black,
-                            color = Color(0xFF0A0E27),
-                            letterSpacing = 1.sp
-                        )
-                    }
+                    ) { Text("VALIDER", fontWeight = FontWeight.Black, color = Color(0xFF0A0E27), letterSpacing = 1.sp) }
                 }
             }
         }
