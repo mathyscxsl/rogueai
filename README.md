@@ -33,7 +33,7 @@
 
 ### Concept
 
-- **Durée** : 3 minutes (180 secondes)
+- **Durée** : 45 secondes
 - **Objectif** : Maintenir la menace mondiale sous 100%
 - **Challenge** : Instructions avec vocabulaire technique absurde, timers dégressifs, pression croissante
 
@@ -318,17 +318,12 @@ Warning      : #FF9800  // Orange
 
 **Timers dégressifs**
 
-- 0-45s : 20s par instruction
-- 45-90s : 18s par instruction
-- 90-135s : 16s par instruction
-- 135-180s : 14s par instruction
-
 **Règles de menace**
 
 - Succès : -5%
 - Timeout : +8%
 - Mauvaise action : +5% (wrong target) ou +3% (wrong params)
-- Victoire : 180s survécues avec menace < 100%
+- Victoire : 45s survécues avec menace < 100%
 
 ---
 
@@ -476,109 +471,6 @@ fun `should parse player_board message correctly`() {
 ```
 
 ---
-
-## 🐛 Problèmes connus
-
-### Limitations actuelles
-
-- ❌ Pas de reconnexion automatique en cas de perte réseau
-- ❌ Pas de tests unitaires implémentés
-- ❌ Mode offline non supporté
-- ❌ Pas d'internationalisation (FR uniquement)
-
-### Solutions prévues
-
-- Reconnexion avec exponential backoff
-- Suite complète de tests (ViewModels, parsing)
-- Support multilingue (EN, ES)
-- Vibrations haptiques
-
----
-
-## 🚀 Améliorations futures
-
-### Court terme
-
-- Tests unitaires (ViewModels, parsing JSON)
-- Reconnexion automatique
-- Vibrations haptiques
-- Mode daltonien
-
-### Moyen terme
-
-- Leaderboard global
-- Système d'achievements
-- Statistiques avancées avec graphiques
-- Plus de sons et musiques
-
-### Long terme
-
-- Internationalisation (EN, ES, JP)
-- Thèmes customisables
-- Support tablettes
-- Mode tournoi
-
----
-
-## 📄 Licence
-
-MIT License
-
-Copyright (c) 2026 [Votre Nom]
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
----
-
-## 👨‍💻 Auteur
-
-**[Votre Nom]**
-
-- GitHub: [@votre-username](https://github.com/votre-username)
-- Email: votre.email@example.com
-- LinkedIn: [Votre Profil](https://linkedin.com/in/votre-profil)
-
----
-
-## 🙏 Remerciements
-
-- **Spaceteam** : Inspiration originale
-- **Square** : OkHttp et Moshi
-- **JetBrains** : Kotlin et Coroutines
-- **Google** : Jetpack Compose
-- **Backend fourni par** : [Nom du fournisseur]
-
----
-
-## 📚 Ressources
-
-- [Documentation Jetpack Compose](https://developer.android.com/jetpack/compose)
-- [Guide MVVM Android](https://developer.android.com/topic/architecture)
-- [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)
-- [OkHttp Documentation](https://square.github.io/okhttp/)
-- [Moshi JSON Library](https://github.com/square/moshi)
-
----
-
-<p align="center">
-  Made with ❤️ and ☕ in France
-</p>
 
 <p align="center">
   <strong>Shout orders. Save the world. 🎮</strong>
